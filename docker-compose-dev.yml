@@ -1,0 +1,90 @@
+version: "3.7"
+services:
+  web:
+    #build:
+    #  context: .
+    image: "networktocode/nautobot:${NAUTOBOT_IMAGE}-py${PYTHON_VER}"
+    command: "nautobot-server runserver 0.0.0.0:8080 --insecure"
+    depends_on:
+    - postgres
+    - redis
+    volumes:
+      - ./nautobot_config.py:/opt/nautobot/nautobot_config.py
+      - ./uwsgi.ini:/opt/nautobot/uwsgi.ini
+    env_file: env/nautobot-dev.env
+    restart: "unless-stopped"
+    ports:
+      - "8080:8080"
+    healthcheck:
+      interval: "5s"
+      timeout: "5s"
+      start_period: "5s"
+      retries: 3
+      test: ["CMD", "nautobot-server", "health_check"]
+
+  worker:
+    image: "networktocode/nautobot:${NAUTOBOT_IMAGE}-py${PYTHON_VER}"
+      #command: "nautobot-server celery worker --loglevel INFO"
+    entrypoint: "sh -c 'nautobot-server celery worker -l $$NAUTOBOT_LOG_LEVEL'"
+    depends_on:
+      - redis
+      - web
+    volumes:
+      - ./nautobot_config.py:/opt/nautobot/nautobot_config.py
+    healthcheck:
+      interval: "5s"
+      timeout: "5s"
+      start_period: "5s"
+      retries: 3
+      test: ["CMD", "nautobot-server", "health_check"]
+
+    env_file: env/nautobot-dev.env
+    restart: "unless-stopped"
+    tty: true
+
+  scheduler:
+    image: "networktocode/nautobot:${NAUTOBOT_IMAGE}-py${PYTHON_VER}"
+    command: "nautobot-server celery beat --loglevel INFO"
+    depends_on:
+      - redis
+      - web
+    volumes:
+      - ./nautobot_config.py:/opt/nautobot/nautobot_config.py
+    restart: "unless-stopped"
+    env_file: env/nautobot-dev.env
+  
+  postgres:
+    image: postgres:15-alpine
+    env_file: env/postgres.env
+    healthcheck:
+      test: "pg_isready -t 2 -d $$POSTGRES_DB -U $$POSTGRES_USER" ## $$ because of docker-compose
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - netbox-postgres-data:/var/lib/postgresql/data
+    restart: "unless-stopped"
+
+  redis:
+    image: redis:7-alpine
+    command:
+    - sh
+    - -c # this is to evaluate the $REDIS_PASSWORD from the env
+    - redis-server --appendonly yes --requirepass $$REDIS_PASSWORD ## $$ because of docker-compose
+    env_file: env/redis.env
+    volumes:
+      - netbox-redis-data:/data
+    healthcheck:
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      test: "timeout 2 redis-cli ping"
+    restart: "unless-stopped"
+
+
+volumes:
+  netbox-postgres-data:
+    driver: local
+  netbox-redis-data:
+    driver: local
+

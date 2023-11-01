@@ -1,0 +1,2 @@
+nautobot[napalm]
+nautobot[remote_storage]
