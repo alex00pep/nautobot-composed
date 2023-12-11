@@ -37,33 +37,20 @@ The provided Docker Compose makes use of environment variables to control what i
 ## Getting Started - Plugins
 
 The installation of plugins has a slightly more involved getting started process. See see the [Plugin documentation.](docs/plugins.md).
-
+And also more than the inpiration repository: https://github.com/nautobot/nautobot-docker-compose.git
 ## Getting Started
 
 1. Have [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed on the host
 2. Clone this repository to your Nautobot host into the current user directory.
 
 ```
-git clone https://github.com/nautobot/nautobot-docker-compose.git
-```
-2.1 Start docker in Swarm mode, so it can manage secrets
-```bash
-docker swarm init
-Swarm initialized: current node (iwd63p7m7iz5m2lam3dakmygj) is now a manager.
-
-If you want to add a worker to this swarm, run the following command:
-
-    docker swarm join --token SWMTKN-1-longstring yourhost:2377
-
-To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+git clone https://github.com/alex00pep/nautobot-composed.git
 ```
 
-2.2 Create a docker secret for all passwords you need, as example i will generate for PgAdmin4 initial user onboarding
+2.2 Create a pseudo-secret for use with Docker Compose for all passwords you need. As example i will generate for PgAdmin4 initial user onboarding.
+ The user is admin@example.com.
 ```bash
-ssh-keygen -t rsa -b 4096 -N "" -f pgadmin-secret
-docker secret create pgadmin-secret pgadmin-secret
-rm -f pgadmin-secret*
-
+echo "admin" > pgamin-secret
 ```
 3. Navigate to the new directory from the git clone
 
@@ -71,10 +58,10 @@ rm -f pgadmin-secret*
 cd nautobot-composed
 ```
 
-4. Copy `env/nautobot-dev.env.example` to `env/nautobot-dev.env`
+4. Copy `env/nautobot.env.example` to `env/nautobot.env`
 
 ```
-cp env/nautobot-dev.env.example env/nautobot-dev.env
+cp env/nautobot.env.example env/nautobot.env
 ```
 
 5. Update the `.env` file for your environment. **THESE SHOULD BE CHANGED** for proper security!
@@ -83,73 +70,16 @@ cp env/nautobot-dev.env.example env/nautobot-dev.env
 7. Run `docker-compose up` to start Nautobot
 
 ```
-export NAUTOBOT_IMAGE=1.6.4;export PYTHON_VER=3.11;docker-compose -f docker-compose-dev.yml up -d
+export NAUTOBOT_IMAGE=1.6.4;export PYTHON_VER=3.11;docker-compose up -d
 ```
-
-8. Tear down
-```
-docker-compose -f docker-compose-dev.yml down
-```
-
 ## Super User Account
 
 ### Create Super User via Environment
 
 The Docker container has a Docker entrypoint script that allows you to create a super user by the usage of Environment variables. This can be done by updating the example `.env` file environment option of `NAUTOBOT_CREATE_SUPERUSER` to `True`. This will then use the information supplied to create the super user.
 
-### Create Super User via Container
+## Navigate to the app
+Open Nautobot Web App: use http://<yourhost:8080>/ and login with admin/admin
 
-After the containers have started:
-
-1. Verify the containers are running:
-
-```
-docker container ls
-```
-
-Example Output:
-
-```
-❯ docker container ls
-CONTAINER ID   IMAGE                           COMMAND                  CREATED         STATUS                   PORTS                                                                                  NAMES
-143f10daa229   networktocode/nautobot:latest   "nautobot-server rqw…"   2 minutes ago   Up 2 minutes (healthy)                                                                                          nautobot-docker-compose_nautobot-worker_1
-bb29124d7acb   networktocode/nautobot:latest   "/docker-entrypoint.…"   2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp, 0.0.0.0:8443->8443/tcp, :::8443->8443/tcp   nautobot-docker-compose_nautobot_1
-ad57ac1749b3   redis:alpine                    "docker-entrypoint.s…"   2 minutes ago   Up 2 minutes             6379/tcp                                                                               nautobot-docker-compose_redis-queue_1
-5ab83264e6fe   postgres:10                     "docker-entrypoint.s…"   2 minutes ago   Up 2 minutes             5432/tcp                                                                               nautobot-docker-compose_postgres_1
-a9ec61ce5e30   redis:alpine                    "docker-entrypoint.s…"   2 minutes ago   Up 2 minutes             6379/tcp                                                                               nautobot-docker-compose_redis-cacheops_1
-a84a89169300   76e40881ecc6                    "docker-entrypoint.s…"   5 weeks ago     Up 5 hours               5432/tcp                                                                               nautobot_plugin_chatops_ansible_postgres_1
-60ef800be813   redis:5-alpine                  "docker-entrypoint.s…"   5 weeks ago     Up 5 hours               6379/tcp                                                                               nautobot_plugin_chatops_ansible_redis_1
-```
-
-2. Enter the bash shell for the `nautobot-docker-compose_nautobot_1` container as indicated by the name in the last column for the Nautobot container that has ports listed
-
-```
-docker exec -it nautobot-docker-compose_nautobot_1 bash
-```
-
-3. Execute Create Super User Command and follow the prompts
-
-```
-nautobot-server createsuperuser
-```
-
-Example Prompts:
-
-```
-nautobot@bb29124d7acb:~$ nautobot-server createsuperuser
-Username: administrator
-Email address:
-Password:
-Password (again):
-Superuser created successfully.
-```
-
-0 VINs found
-
-
-
-View Showroom
-0 VINs identified
-
-
-Send Feedback
+Open another tab for PgAdmin4: use http://<yourhost:8084>/ and login with admin/admin
+## Send Feedback and Support the project

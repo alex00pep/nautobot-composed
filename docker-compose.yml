@@ -38,7 +38,7 @@ services:
       retries: 3
       test: ["CMD", "nautobot-server", "health_check"]
 
-    env_file: env/nautobot-dev.env
+    env_file: env/nautobot.env
     restart: "unless-stopped"
     tty: true
 
@@ -108,3 +108,5 @@ secrets:
   pgadmin-secret:
     #external: true
     file: pgadmin-secret
+  db-secret:
+    file: db-secret
