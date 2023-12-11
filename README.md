@@ -46,11 +46,29 @@ The installation of plugins has a slightly more involved getting started process
 ```
 git clone https://github.com/nautobot/nautobot-docker-compose.git
 ```
+2.1 Start docker in Swarm mode, so it can manage secrets
+```bash
+docker swarm init
+Swarm initialized: current node (iwd63p7m7iz5m2lam3dakmygj) is now a manager.
 
+If you want to add a worker to this swarm, run the following command:
+
+    docker swarm join --token SWMTKN-1-longstring yourhost:2377
+
+To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+```
+
+2.2 Create a docker secret for all passwords you need, as example i will generate for PgAdmin4 initial user onboarding
+```bash
+ssh-keygen -t rsa -b 4096 -N "" -f pgadmin-secret
+docker secret create pgadmin-secret pgadmin-secret
+rm -f pgadmin-secret*
+
+```
 3. Navigate to the new directory from the git clone
 
 ```
-cd nautobot-docker-compose
+cd nautobot-composed
 ```
 
 4. Copy `env/nautobot-dev.env.example` to `env/nautobot-dev.env`
@@ -62,10 +80,10 @@ cp env/nautobot-dev.env.example env/nautobot-dev.env
 5. Update the `.env` file for your environment. **THESE SHOULD BE CHANGED** for proper security!
 
 
-7. Run `docker-compose up` to start the environment
+7. Run `docker-compose up` to start Nautobot
 
 ```
-docker-compose -f docker-compose-dev.yml up -d
+export NAUTOBOT_IMAGE=1.6.4;export PYTHON_VER=3.11;docker-compose -f docker-compose-dev.yml up -d
 ```
 
 8. Tear down

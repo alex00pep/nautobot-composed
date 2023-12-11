@@ -6,12 +6,12 @@ services:
     image: "networktocode/nautobot:${NAUTOBOT_IMAGE}-py${PYTHON_VER}"
     command: "nautobot-server runserver 0.0.0.0:8080 --insecure"
     depends_on:
-    - postgres
+    - db
     - redis
     volumes:
       - ./nautobot_config.py:/opt/nautobot/nautobot_config.py
-      - ./uwsgi.ini:/opt/nautobot/uwsgi.ini
-    env_file: env/nautobot-dev.env
+      #- ./uwsgi.ini:/opt/nautobot/uwsgi.ini
+    env_file: env/nautobot.env
     restart: "unless-stopped"
     ports:
       - "8080:8080"
@@ -51,9 +51,9 @@ services:
     volumes:
       - ./nautobot_config.py:/opt/nautobot/nautobot_config.py
     restart: "unless-stopped"
-    env_file: env/nautobot-dev.env
+    env_file: env/nautobot.env
   
-  postgres:
+  db:
     image: postgres:15-alpine
     env_file: env/postgres.env
     healthcheck:
@@ -62,8 +62,24 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - netbox-postgres-data:/var/lib/postgresql/data
+      - nautobot-postgres-data:/var/lib/postgresql/data
     restart: "unless-stopped"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    env_file: env/pgadmin.env
+    secrets:
+      - pgadmin-secret
+    volumes:
+      - ./pgadmin-servers.json:/pgadmin4/servers.json
+      - type: bind
+        source: pgadmin-secret
+        target: /run/secrets/pgadmin-secret
+        read_only: true
+    ports:
+      - "8084:8084"
+    depends_on:
+      - db
 
   redis:
     image: redis:7-alpine
@@ -73,7 +89,7 @@ services:
     - redis-server --appendonly yes --requirepass $$REDIS_PASSWORD ## $$ because of docker-compose
     env_file: env/redis.env
     volumes:
-      - netbox-redis-data:/data
+      - nautobot-redis-data:/data
     healthcheck:
       start_period: 20s
       timeout: 3s
@@ -83,8 +99,12 @@ services:
 
 
 volumes:
-  netbox-postgres-data:
+  nautobot-postgres-data:
     driver: local
-  netbox-redis-data:
+  nautobot-redis-data:
     driver: local
 
+secrets:
+  pgadmin-secret:
+    #external: true
+    file: pgadmin-secret
