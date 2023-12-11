@@ -69,6 +69,12 @@ if DATABASES["default"]["ENGINE"].endswith("mysql"):
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-SECRET_KEY
 SECRET_KEY = os.getenv("NAUTOBOT_SECRET_KEY", "fdq3q4v(!+40as_hodg8w%^$dix1wxmz%+p8)k!*h5bmu@*e3a")
 
+#This will ensure your default setting's INSTALLED_APPS do not have to be modified, and the user can specify additional apps with ease. Similarly, additional MIDDLEWARE can be added using EXTRA_MIDDLEWARE.
+#Be cautious not to confuse extra applications with Nautobot plugins which are installed using the PLUGINS setting. They are similar, but distinctly different!
+
+EXTRA_INSTALLED_APPS = [
+]
+
 #####################################
 #                                   #
 #   Optional Django core settings   #
