@@ -1,2 +1,3 @@
 nautobot[napalm]
 nautobot[remote_storage]
+nautobot>=1.6.16 # not directly required, pinned by Snyk to avoid a vulnerability
